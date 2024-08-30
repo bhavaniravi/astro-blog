@@ -4,11 +4,35 @@ import Header from "../components/Header.astro";
 import Footer from "../components/Footer.astro";
 import Post from "../components/Post.astro";
 import ColorScript from "../components/ColorScript.astro";
+import fs from 'fs'; // Import the 'fs' module
 
 import { SITE_TITLE, SITE_DESCRIPTION } from "../config";
 
 // Use Astro.glob() to fetch all posts, and then sort them by date.
-const posts = (await Astro.glob("../posts/*.md")).sort(
+let blog_path = '/Users/bhavaniravi/projects/til/'
+
+async function getFiles(dir, files_list: Record<string, any>[] = []) {
+	let files_ = files_list || [];
+	var files = fs.readdirSync(dir);
+	for (var i in files) {
+		var name = dir + '/' + files[i];
+		if (fs.statSync(name).isDirectory()) {
+			getFiles(name, files_);
+		} else {
+			if (name.endsWith('.md')){
+				console.log("=====================", name)
+				files_.push(await Astro.glob(name));
+			}
+		}
+	}
+	return files_;
+}
+
+let posts = getFiles(blog_path).then((files) => {
+	return files
+});
+
+posts.sort(
 	(a, b) =>
 		new Date(b.frontmatter.updated || b.frontmatter.added).valueOf() -
 		new Date(a.frontmatter.updated || a.frontmatter.added).valueOf()
